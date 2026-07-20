@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "migrated_at": "2026-07-14T17:03:47.613561+00:00",
+  "source": "C:\\Users\\BAY 2\\.claude",
+  "destination": "C:\\Users\\BAY 2\\.clawcodex",
+  "copied": [
+    "skills/agents-sdk",
+    "skills/cloudflare",
+    "skills/cloudflare-email-service",
+    "skills/cloudflare-one",
+    "skills/cloudflare-one-migrations",
+    "skills/durable-objects",
+    "skills/sandbox-sdk",
+    "skills/strix",
+    "skills/turnstile-spin",
+    "skills/web-perf",
+    "skills/workers-best-practices",
+    "skills/wrangler",
+    "plugins",
+    "projects/C--Users-BAY-2-Desktop-agent-os-main/memory",
+    "projects/C--Users-BAY-2-Desktop-Agentic-Lead-Force/memory",
+    "projects/C--Users-BAY-2-Desktop-LEADFORCE-CLIENTS-Benjamin-Persyn/memory"
+  ],
+  "skipped": [],
+  "errors": []
+}

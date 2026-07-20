@@ -1,0 +1,144 @@
+{
+  "default_provider": "openai",
+  "providers": {
+    "anthropic": {
+      "api_key": "",
+      "base_url": "https://api.anthropic.com",
+      "default_model": "claude-sonnet-4-6"
+    },
+    "openai": {
+      "api_key": "cfut_Ff02sSJMFjeuKFLZgE89NsYBDu1x0LQAOB3S75H3a9f19ec0\u0016.",
+      "base_url": "https://api.cloudflare.com/client/v4/accounts/fd3c942ae1ce7fbd1a4b230ba5244d66/ai/v1",
+      "default_model": "@cf/openai/gpt-oss-120b"
+    },
+    "zai": {
+      "api_key": "",
+      "base_url": "https://api.z.ai/api/coding/paas/v4",
+      "default_model": "GLM-5.1"
+    },
+    "minimax": {
+      "api_key": "",
+      "base_url": "https://api.minimax.io/anthropic",
+      "default_model": "MiniMax-M3"
+    },
+    "deepseek": {
+      "api_key": "",
+      "base_url": "https://api.deepseek.com",
+      "default_model": "deepseek-v4-pro"
+    },
+    "gemini": {
+      "api_key": "",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+      "default_model": "gemini-2.5-pro"
+    },
+    "openrouter": {
+      "api_key": "",
+      "base_url": "https://openrouter.ai/api/v1",
+      "default_model": "anthropic/claude-sonnet-4.5"
+    },
+    "nvidia-nim": {
+      "api_key": "",
+      "base_url": "https://integrate.api.nvidia.com/v1",
+      "default_model": "deepseek-ai/deepseek-v4-pro"
+    },
+    "atlascloud": {
+      "api_key": "",
+      "base_url": "https://api.atlascloud.ai/v1",
+      "default_model": "deepseek-ai/deepseek-v4-flash"
+    },
+    "wanjie-ark": {
+      "api_key": "",
+      "base_url": "https://maas-openapi.wanjiedata.com/api/v1",
+      "default_model": "deepseek-reasoner"
+    },
+    "volcengine": {
+      "api_key": "",
+      "base_url": "https://ark.cn-beijing.volces.com/api/coding/v3",
+      "default_model": "DeepSeek-V4-Pro"
+    },
+    "xiaomi-mimo": {
+      "api_key": "",
+      "base_url": "https://token-plan-sgp.xiaomimimo.com/v1",
+      "default_model": "mimo-v2.5-pro"
+    },
+    "novita": {
+      "api_key": "",
+      "base_url": "https://api.novita.ai/openai/v1",
+      "default_model": "deepseek/deepseek-v4-pro"
+    },
+    "fireworks": {
+      "api_key": "",
+      "base_url": "https://api.fireworks.ai/inference/v1",
+      "default_model": "accounts/fireworks/models/deepseek-v4-pro"
+    },
+    "siliconflow": {
+      "api_key": "",
+      "base_url": "https://api.siliconflow.com/v1",
+      "default_model": "deepseek-ai/DeepSeek-V4-Pro"
+    },
+    "siliconflow-cn": {
+      "api_key": "",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "default_model": "deepseek-ai/DeepSeek-V4-Pro"
+    },
+    "arcee": {
+      "api_key": "",
+      "base_url": "https://api.arcee.ai/api/v1",
+      "default_model": "trinity-large-thinking"
+    },
+    "moonshot": {
+      "api_key": "",
+      "base_url": "https://api.moonshot.ai/v1",
+      "default_model": "kimi-k2.7-code"
+    },
+    "sglang": {
+      "api_key": "",
+      "base_url": "http://localhost:30000/v1",
+      "default_model": "deepseek-ai/DeepSeek-V4-Pro"
+    },
+    "vllm": {
+      "api_key": "",
+      "base_url": "http://localhost:8000/v1",
+      "default_model": "deepseek-ai/DeepSeek-V4-Pro"
+    },
+    "ollama": {
+      "api_key": "",
+      "base_url": "http://localhost:11434/v1",
+      "default_model": "deepseek-coder:1.3b"
+    },
+    "huggingface": {
+      "api_key": "",
+      "base_url": "https://router.huggingface.co/v1",
+      "default_model": "deepseek-ai/DeepSeek-V4-Pro"
+    },
+    "together": {
+      "api_key": "",
+      "base_url": "https://api.together.xyz/v1",
+      "default_model": "deepseek-ai/DeepSeek-V4-Pro"
+    },
+    "stepfun": {
+      "api_key": "",
+      "base_url": "https://api.stepfun.ai/v1",
+      "default_model": "step-3.7-flash"
+    },
+    "deepinfra": {
+      "api_key": "",
+      "base_url": "https://api.deepinfra.com/v1/openai",
+      "default_model": "deepseek-ai/DeepSeek-V4-Pro"
+    },
+    "meta": {
+      "api_key": "",
+      "base_url": "https://api.meta.ai/v1",
+      "default_model": "muse-spark-1.1"
+    }
+  },
+  "session": {
+    "auto_save": true,
+    "max_history": 100
+  },
+  "projects": {
+    "C:\\Users\\BAY 2\\Documents\\Benj-Os": {
+      "hasTrustDialogAccepted": true
+    }
+  }
+}
