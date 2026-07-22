@@ -109,49 +109,61 @@ backend:
     implemented: true
     working: false
     file: "/app/app/api/dashboard/stats/route.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
         comment: "CRITICAL: Endpoint returns 500 error. Database connection failed with 'connect ECONNREFUSED 127.0.0.1:5432'. The NEON_DATABASE_URL environment variable is missing from .env file. The endpoint code is properly implemented and would return agentsOnline, workflowsRunning, signalsToday, successRate, and systemHealth if database was connected. PostgreSQL database is required but not configured."
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL: Database connection now works (NEON_DATABASE_URL configured), but SQL query fails with 'column id does not exist' error in search_jobs table. The API code expects search_jobs table to have columns: id, created_at, status, signals_verified, results_collected. Schema mismatch between API expectations and actual database schema. Need to either: (1) Create/update database schema to match API expectations, or (2) Update API queries to match existing schema."
 
   - task: "Dashboard Workflows API - GET /api/dashboard/workflows"
     implemented: true
     working: false
     file: "/app/app/api/dashboard/workflows/route.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
         comment: "CRITICAL: Endpoint returns 500 error. Database connection failed with 'connect ECONNREFUSED 127.0.0.1:5432'. The NEON_DATABASE_URL environment variable is missing from .env file. The endpoint code is properly implemented and would return array of workflows with id, name, type, status, progress if database was connected."
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL: Database connection now works, but SQL query fails with 'column id does not exist' error in search_jobs table. The API code expects search_jobs table to have columns: id, campaign_id, run_cycle, status, signals_verified, results_collected, created_at, updated_at. Schema mismatch between API expectations and actual database schema."
 
   - task: "Dashboard Signals API - GET /api/dashboard/signals"
     implemented: true
     working: false
     file: "/app/app/api/dashboard/signals/route.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
         comment: "CRITICAL: Endpoint returns 500 error. Database connection failed with 'connect ECONNREFUSED 127.0.0.1:5432'. The NEON_DATABASE_URL environment variable is missing from .env file. The endpoint code is properly implemented and would return array of signals with id, type, title, campaign, timeAgo, score if database was connected."
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL: Database connection now works, but SQL query fails with 'column organization does not exist' error in retirement_signal_searches table. The API code expects retirement_signal_searches table to have columns: id, signal_type, person_name, organization, campaign_id, confidence_score, created_at. Schema mismatch between API expectations and actual database schema."
 
   - task: "Dashboard Analytics API - GET /api/dashboard/analytics"
     implemented: true
     working: false
     file: "/app/app/api/dashboard/analytics/route.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
         comment: "CRITICAL: Endpoint returns 500 error. Database connection failed with 'connect ECONNREFUSED 127.0.0.1:5432'. The NEON_DATABASE_URL environment variable is missing from .env file. The endpoint code is properly implemented and would return signalsByCampaign, signalClassification, leadsPipeline, dailyTrend if database was connected."
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL: Database connection now works, but SQL query fails with 'column email does not exist' error in extracted_leads table. The API code expects multiple tables: retirement_signal_searches (campaign_id, confidence_score, created_at), extracted_leads (email), outreach_queue. Schema mismatch between API expectations and actual database schema."
 
 frontend:
   - task: "Frontend testing not requested"
@@ -169,7 +181,7 @@ frontend:
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 1
+  test_sequence: 2
   run_ui: false
 
 test_plan:
@@ -178,10 +190,16 @@ test_plan:
     - "Dashboard Workflows API - GET /api/dashboard/workflows"
     - "Dashboard Signals API - GET /api/dashboard/signals"
     - "Dashboard Analytics API - GET /api/dashboard/analytics"
-  stuck_tasks: []
+  stuck_tasks:
+    - "Dashboard Stats API - GET /api/dashboard/stats"
+    - "Dashboard Workflows API - GET /api/dashboard/workflows"
+    - "Dashboard Signals API - GET /api/dashboard/signals"
+    - "Dashboard Analytics API - GET /api/dashboard/analytics"
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "testing"
     message: "Completed testing of all 4 dashboard API endpoints. All endpoints are properly implemented with correct code structure, error handling, and response formatting. However, ALL endpoints are failing with database connection errors. Root cause: NEON_DATABASE_URL environment variable is missing from /app/.env file. The pg library defaults to localhost:5432 when no connection string is provided, causing 'connect ECONNREFUSED 127.0.0.1:5432' errors. REQUIRED ACTION: Add NEON_DATABASE_URL to .env file with valid PostgreSQL connection string. The database should contain tables: search_jobs, retirement_signal_searches, extracted_leads, and outreach_queue. Once database is configured, all endpoints should work correctly as the code implementation is sound."
+  - agent: "testing"
+    message: "RETESTED all 4 dashboard API endpoints after NEON_DATABASE_URL was configured. Database connection is now working successfully. However, ALL 4 endpoints are failing with SQL schema mismatch errors. The database tables exist but have different column structures than what the API code expects. Specific issues: (1) search_jobs table missing 'id' column - affects /stats and /workflows endpoints, (2) retirement_signal_searches table missing 'organization' column - affects /signals endpoint, (3) extracted_leads table missing 'email' column - affects /analytics endpoint. REQUIRED ACTION: Either create SQL migration to add missing columns to match API expectations, OR update API queries to use existing database schema. Recommend using websearch to find the actual Neon database schema or check if there's a schema initialization script that needs to be run."
