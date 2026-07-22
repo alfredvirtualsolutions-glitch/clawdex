@@ -8,7 +8,8 @@ export async function GET() {
         id,
         signal_type,
         person_name,
-        organization,
+        organization_name,
+        business_name,
         campaign_id,
         confidence_score,
         created_at
@@ -40,7 +41,7 @@ export async function GET() {
 
 function formatSignalTitle(row) {
   const name = row.person_name || 'Unknown';
-  const org = row.organization || row.signal_type || '';
+  const org = row.organization_name || row.business_name || row.signal_type || '';
   return org ? `${name} · ${org}` : name;
 }
 

@@ -5,14 +5,14 @@ export async function GET() {
   try {
     const result = await query(
       `SELECT 
-        id,
+        job_id,
         campaign_id,
         run_cycle,
         status,
         signals_verified,
         results_collected,
         created_at,
-        updated_at
+        completed_at
        FROM search_jobs 
        ORDER BY created_at DESC 
        LIMIT 10`,
@@ -20,13 +20,13 @@ export async function GET() {
     );
 
     const workflows = result.rows.map(row => ({
-      id: row.id,
+      id: row.job_id,
       name: `${row.campaign_id || 'Campaign'} - ${row.run_cycle || 'Cycle'}`,
       type: determineWorkflowType(row),
       status: row.status || 'pending',
       progress: calculateProgress(row.signals_verified, row.results_collected),
       createdAt: row.created_at,
-      updatedAt: row.updated_at,
+      completedAt: row.completed_at,
     }));
 
     return NextResponse.json({ workflows });

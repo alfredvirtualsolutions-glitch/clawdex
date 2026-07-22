@@ -5,7 +5,7 @@ export async function GET() {
   try {
     // Agents Online - count of active search_jobs today
     const agentsResult = await query(
-      `SELECT COUNT(DISTINCT id) as count 
+      `SELECT COUNT(DISTINCT job_id) as count 
        FROM search_jobs 
        WHERE DATE(created_at) = CURRENT_DATE`,
       []

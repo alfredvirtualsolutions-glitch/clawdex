@@ -34,7 +34,7 @@ export async function GET() {
         (SELECT COUNT(*) FROM retirement_signal_searches) as signals,
         (SELECT COUNT(*) FROM retirement_signal_searches WHERE person_name IS NOT NULL) as named,
         (SELECT COUNT(*) FROM extracted_leads) as enriched,
-        (SELECT COUNT(*) FROM extracted_leads WHERE email IS NOT NULL) as valid_email,
+        (SELECT COUNT(*) FROM extracted_leads WHERE professional_email IS NOT NULL) as valid_email,
         (SELECT COUNT(*) FROM outreach_queue) as contacted`,
       []
     );
