@@ -31,8 +31,14 @@ dist/
 dist
 
 # Environment files (comprehensive coverage)
+.env
+.env.local
+.env.*.local
 *token.json*
 *credentials.json*
+
+# Juan OS local exports
+juan_analytics.html
 
 # Logs and debug files
 npm-debug.log*
