@@ -78,7 +78,7 @@ export function LayoutShell({ children }: { children: ReactNode }) {
             <button
               onClick={() => api.runCycle().catch(() => {})}
               disabled={cycleRunning}
-              className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
             >
               <Play size={15} /> {cycleRunning ? 'Running…' : 'Run cycle'}
             </button>

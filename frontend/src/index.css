@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,23 +8,40 @@
 
 @layer base {
   body {
+    /* COSMIC light: warm-neutral canvas */
     @apply bg-slate-50 text-slate-800 antialiased;
-    font-feature-settings: 'cv11', 'ss01';
   }
-  .dark body { @apply bg-slate-950 text-slate-200; }
+  .dark body {
+    /* COSMIC dark: #1b1b1b base */
+    @apply bg-slate-950 text-slate-100;
+  }
 }
 
 @layer components {
   .card {
-    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+    /* COSMIC container — rounded, quiet border, soft shadow */
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
   }
-  .dark .card { @apply border-slate-800 bg-slate-900; }
+  .dark .card {
+    /* COSMIC surface #292929 on #1b1b1b */
+    @apply border-slate-800 bg-slate-900;
+  }
   .muted { @apply text-slate-500 dark:text-slate-400; }
   .pill {
     @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
 }
 
-/* React Flow theming for dark mode */
-.dark .react-flow__background { background: #020617; }
+/* React Flow theming */
+.react-flow__background { background: transparent; }
+.dark .react-flow__background { background: #1b1b1b; }
 .react-flow__attribution { display: none; }
+.react-flow__controls button {
+  border-radius: 8px;
+  background: #fff;
+}
+.dark .react-flow__controls button {
+  background: #2e2e2e;
+  border-color: #3a3a3a;
+  color: #e4e4e4;
+}

@@ -15,6 +15,7 @@ const DIVISION_ORDER = ['command', 'signal', 'extraction', 'data', 'qualificatio
 export function WorkflowCanvas() {
   const catalog = useAppStore((s) => s.catalog)
   const liveRuns = useAppStore((s) => s.liveRuns)
+  const theme = useAppStore((s) => s.theme)
   const [local, setLocal] = useState<Catalog | null>(null)
 
   useEffect(() => { if (!catalog) api.catalog().then(setLocal).catch(() => {}) }, [catalog])
@@ -28,6 +29,9 @@ export function WorkflowCanvas() {
     DIVISION_ORDER.forEach((d, i) => (colByDiv[d] = i))
     const perDiv: Record<string, number> = {}
 
+    const dark = theme === 'dark'
+    const surface = dark ? '#292929' : '#ffffff'
+    const text = dark ? '#e4e4e4' : '#1b1b1b'
     const nodes: Node[] = cat.agents.map((a) => {
       const row = perDiv[a.division] ?? 0
       perDiv[a.division] = row + 1
@@ -37,11 +41,12 @@ export function WorkflowCanvas() {
         position: { x: colByDiv[a.division] * 210, y: row * 96 + 20 },
         data: { label: `${a.name}\n${a.role}` },
         style: {
-          width: 176, padding: 8, borderRadius: 12, fontSize: 11,
-          border: `2px solid ${active ? '#f59e0b' : a.division_color}`,
-          background: active ? '#fffbeb' : 'white',
-          color: '#0f172a', whiteSpace: 'pre-line', textAlign: 'center' as const,
-          boxShadow: active ? '0 0 0 3px rgba(245,158,11,.25)' : '0 1px 2px rgba(0,0,0,.06)',
+          width: 176, padding: 8, borderRadius: 14, fontSize: 11,
+          // COSMIC orange highlight on active; division color otherwise
+          border: `2px solid ${active ? '#ffad00' : a.division_color}`,
+          background: active ? (dark ? '#3a2f12' : '#fff6e0') : surface,
+          color: text, whiteSpace: 'pre-line', textAlign: 'center' as const,
+          boxShadow: active ? '0 0 0 3px rgba(255,173,0,.28)' : '0 1px 2px rgba(0,0,0,.10)',
         },
       }
     })
@@ -55,7 +60,7 @@ export function WorkflowCanvas() {
       markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8' },
     }))
     return { nodes, edges }
-  }, [cat, lastActiveKey])
+  }, [cat, lastActiveKey, theme])
 
   return (
     <div className="space-y-3">

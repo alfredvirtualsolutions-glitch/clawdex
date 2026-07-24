@@ -24,7 +24,8 @@ export function CommandCenter() {
 
   const runs = [...liveRuns, ...seedRuns].slice(0, 14)
   const classes = ['Hot', 'Moderate', 'Nurture']
-  const colors: Record<string, string> = { Hot: '#e11d48', Moderate: '#f59e0b', Nurture: '#0ea5e9' }
+  // COSMIC extended palette
+  const colors: Record<string, string> = { Hot: '#f93a83', Moderate: '#ffad00', Nurture: '#48b9c7' }
   const chart = classes.map((c) => ({ name: c, count: leads.filter((l) => l.classification === c).length }))
 
   return (
