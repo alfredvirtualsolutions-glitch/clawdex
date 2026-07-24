@@ -47,4 +47,5 @@ export const api = {
     get<{ providers: { name: string; agent: string; purpose: string; env: string; configured: boolean }[] }>('/api/providers'),
   testProvider: (name: string) =>
     post<{ ok: boolean; result?: unknown; error?: string }>('/api/providers/test', { name }),
+  llmStatus: () => get<{ backend: string; model: string; configured: boolean }>('/api/llm/status'),
 }

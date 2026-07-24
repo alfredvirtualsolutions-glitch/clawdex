@@ -6,3 +6,5 @@ python-dotenv>=1.0
 # Agent OS providers
 httpx>=0.27
 dnspython>=2.6
+# Optional: only needed when LLM_BACKEND=anthropic
+# anthropic>=0.40

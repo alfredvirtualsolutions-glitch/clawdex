@@ -13,7 +13,11 @@ interface Provider { name: string; agent: string; purpose: string; env: string; 
 export function Settings() {
   const { accent, setAccent, round, setRound, theme, toggleTheme } = useAppStore()
   const [providers, setProviders] = useState<Provider[]>([])
-  useEffect(() => { api.providers().then((r) => setProviders(r.providers)).catch(() => {}) }, [])
+  const [llm, setLlm] = useState<{ backend: string; model: string; configured: boolean } | null>(null)
+  useEffect(() => {
+    api.providers().then((r) => setProviders(r.providers)).catch(() => {})
+    api.llmStatus().then(setLlm).catch(() => {})
+  }, [])
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -66,6 +70,19 @@ export function Settings() {
             Switch to {theme === 'dark' ? 'light' : 'dark'}
           </button>
           <span className="muted text-sm">Currently {theme}. Follows your OS by default.</span>
+        </div>
+      </Card>
+
+      <Card>
+        <SectionTitle icon={<Plug size={18} className="text-brand-600" />}>Model runtime</SectionTitle>
+        <p className="muted mb-3 text-sm">
+          The swappable LLM behind Scribe, Pulse &amp; Compass. Set <code className="mono">LLM_BACKEND</code> in
+          <code className="mono"> .env</code> to <code className="mono">ollama</code>, <code className="mono">openai</code>, or <code className="mono">anthropic</code>.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge>backend: {llm?.backend ?? '—'}</Badge>
+          <Badge>model: {llm?.model ?? '—'}</Badge>
+          <Badge tone={llm?.configured ? 'valid' : undefined}>{llm?.configured ? 'configured' : 'not set → heuristic fallback'}</Badge>
         </div>
       </Card>
 

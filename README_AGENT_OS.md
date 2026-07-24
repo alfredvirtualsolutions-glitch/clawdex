@@ -105,6 +105,26 @@ Endpoints: `GET /api/providers` (status), `POST /api/providers/test` (live key c
 > Security: put keys only in `.env` (gitignored). Never commit keys. MX Guardian (DNS)
 > works with no key; the HTTP providers require open outbound network access.
 
+## Model runtime (swappable LLM)
+
+The reasoning agents (Scribe personalization, Pulse reply classification, Compass) call a
+**pluggable LLM runtime** — swap providers with one env var, no code change
+(`juan_os/agent_os/llm.py`):
+
+```
+LLM_BACKEND=ollama      # local-first (default) — http://localhost:11434
+LLM_BACKEND=openai      # any OpenAI-compatible API (OpenAI, Groq, Together, OpenRouter,
+                        # LM Studio, vLLM) via OPENAI_BASE_URL / OPENAI_MODEL
+LLM_BACKEND=anthropic   # Claude via the official anthropic SDK (ANTHROPIC_MODEL, e.g. claude-opus-5)
+```
+
+When the selected backend isn't configured/reachable, agents fall back to safe deterministic
+heuristics (e.g. keyword-based reply classification) so the system keeps working offline.
+
+Endpoints: `GET /api/llm/status`, `POST /api/agents/scribe/draft` (draft a message from a
+signal), `POST /api/agents/pulse/classify` (classify a reply). Anthropic backend needs
+`pip install anthropic`.
+
 ## Backend API
 
 | Endpoint | Purpose |

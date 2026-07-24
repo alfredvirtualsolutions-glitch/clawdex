@@ -18,7 +18,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from . import catalog, providers, store
+from . import catalog, llm, providers, store
 from .orchestrator import Orchestrator
 
 app = FastAPI(title="Juan OS — VBS Local Agent OS", version="0.1.0")
@@ -284,6 +284,41 @@ def _insert_signal(campaign_id: str, query: str, res: dict) -> dict:
     finally:
         conn.close()
     return row
+
+
+# --------------------------------------------------------------------------- #
+# LLM / model runtime — swappable backend (Ollama / OpenAI-compatible / Claude)
+# --------------------------------------------------------------------------- #
+@app.get("/api/llm/status")
+def llm_status():
+    return llm.status()
+
+
+@app.post("/api/agents/scribe/draft")
+async def scribe_draft(payload: dict):
+    """Scribe drafts an evidence-backed message from a signal via the configured LLM."""
+    signal_id = (payload or {}).get("signal_id")
+    advisor = (payload or {}).get("advisor_name", "Your advisor")
+    sig = store.one("signals", signal_id) if signal_id else None
+    if not sig:
+        sigs = store.rows("signals", limit=1)
+        sig = sigs[0] if sigs else None
+    if not sig:
+        return JSONResponse({"error": "no signal available"}, status_code=404)
+    result = llm.scribe_draft(sig["title"], sig.get("summary") or "", advisor)
+    run = store.add_run(sig["campaign_id"], "scribe", "personalized", "signal", sig["id"],
+                        f"Drafted message ({result.get('backend', 'fallback')})")
+    await hub.broadcast({"type": "run", **run})
+    return {"signal": {"id": sig["id"], "title": sig["title"]}, **result}
+
+
+@app.post("/api/agents/pulse/classify")
+def pulse_classify(payload: dict):
+    """Pulse classifies a reply's intent via the configured LLM (or heuristic fallback)."""
+    text = (payload or {}).get("text", "").strip()
+    if not text:
+        return JSONResponse({"error": "text required"}, status_code=400)
+    return llm.pulse_classify(text)
 
 
 @app.get("/healthz")
