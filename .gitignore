@@ -40,6 +40,11 @@ dist
 # Juan OS local exports
 juan_analytics.html
 
+# Agent OS local database
+juan_os/agent_os/*.db
+juan_os/agent_os/*.db-wal
+juan_os/agent_os/*.db-shm
+
 # Logs and debug files
 npm-debug.log*
 yarn-debug.log*
