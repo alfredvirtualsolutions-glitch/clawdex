@@ -8,11 +8,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Accent — COSMIC teal (darker shades for contrast on light surfaces)
+        // Accent — driven by CSS variables so Settings can re-skin it live.
+        // Defaults (COSMIC teal) are seeded in index.css and by lib/theme.ts.
         brand: {
-          50: '#e9fafb', 100: '#c9f0f4', 200: '#a3e4ea', 300: '#7ed7df',
-          400: '#5fc8d2', 500: '#48b9c7', 600: '#379aa7', 700: '#2c7c87',
-          800: '#245f68', 900: '#1f4c53',
+          50: 'rgb(var(--brand-50) / <alpha-value>)',
+          100: 'rgb(var(--brand-100) / <alpha-value>)',
+          200: 'rgb(var(--brand-200) / <alpha-value>)',
+          300: 'rgb(var(--brand-300) / <alpha-value>)',
+          400: 'rgb(var(--brand-400) / <alpha-value>)',
+          500: 'rgb(var(--brand-500) / <alpha-value>)',
+          600: 'rgb(var(--brand-600) / <alpha-value>)',
+          700: 'rgb(var(--brand-700) / <alpha-value>)',
+          800: 'rgb(var(--brand-800) / <alpha-value>)',
+          900: 'rgb(var(--brand-900) / <alpha-value>)',
         },
         // Neutrals — remaps `slate-*` to COSMIC greys so existing utilities adopt the theme
         slate: {
@@ -32,8 +40,10 @@ export default {
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       borderRadius: {
-        // COSMIC leans rounded — bump the default container radius
-        lg: '0.625rem', xl: '0.875rem', '2xl': '1.15rem',
+        // Driven by CSS variables so the Settings roundness preset applies live
+        lg: 'var(--radius-lg, 0.625rem)',
+        xl: 'var(--radius-xl, 0.875rem)',
+        '2xl': 'var(--radius-2xl, 1.15rem)',
       },
     },
   },

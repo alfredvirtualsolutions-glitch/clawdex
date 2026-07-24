@@ -11,12 +11,14 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from typing import Any
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
-from . import catalog, store
+from . import catalog, providers, store
 from .orchestrator import Orchestrator
 
 app = FastAPI(title="Juan OS — VBS Local Agent OS", version="0.1.0")
@@ -147,6 +149,141 @@ async def run_cycle(payload: dict | None = None):
         return {"error": "no active campaign"}
     asyncio.create_task(orchestrator.run_cycle(campaign_id))
     return {"status": "started", "campaign_id": campaign_id}
+
+
+# --------------------------------------------------------------------------- #
+# Providers — real external integrations (Exa, Firecrawl, Apollo, Clearout, …)
+# --------------------------------------------------------------------------- #
+@app.get("/api/providers")
+def providers_status():
+    return {"providers": providers.status()}
+
+
+@app.post("/api/providers/test")
+def providers_test(payload: dict):
+    """Best-effort live call to verify a provider key. Requires open egress."""
+    name = (payload or {}).get("name", "")
+    try:
+        if name == "exa":
+            return {"ok": True, "result": providers.exa_search("retirement planning news", 3)}
+        if name == "firecrawl":
+            return {"ok": True, "result": providers.firecrawl_scrape("https://example.com")}
+        if name == "apollo":
+            return {"ok": True, "result": providers.apollo_enrich(domain="apollo.io")}
+        if name == "clearout":
+            return {"ok": True, "result": providers.clearout_verify("support@clearout.io")}
+        if name == "dns":
+            return {"ok": True, "result": providers.mx_lookup(payload.get("domain", "gmail.com"))}
+        if name == "warmy":
+            return {"ok": True, "result": providers.warmy_status()}
+        if name == "composio":
+            return {"ok": True, "result": providers.composio_apps()}
+        return JSONResponse({"ok": False, "error": f"unknown provider '{name}'"}, status_code=400)
+    except providers.ProviderUnavailable as exc:
+        return JSONResponse({"ok": False, "error": str(exc)}, status_code=400)
+    except Exception as exc:  # noqa: BLE001
+        return JSONResponse({"ok": False, "error": f"{type(exc).__name__}: {exc}"}, status_code=502)
+
+
+@app.post("/api/research/live")
+async def research_live(payload: dict):
+    """Nova(Exa) → Delta(Firecrawl): real search that seeds verified signals."""
+    query = (payload or {}).get("query", "").strip()
+    campaign_id = (payload or {}).get("campaign_id") or _first_campaign()
+    if not query:
+        return JSONResponse({"error": "query required"}, status_code=400)
+    try:
+        results = providers.exa_search(query, (payload or {}).get("num", 5))
+    except providers.ProviderUnavailable as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    except Exception as exc:  # noqa: BLE001
+        return JSONResponse({"error": f"{type(exc).__name__}: {exc}"}, status_code=502)
+
+    created = []
+    for res in results:
+        row = _insert_signal(campaign_id, query, res)
+        created.append(row)
+        run = store.add_run(campaign_id, "nova", "discovered", "signal", row["id"],
+                            f"Exa: {res.get('title') or res.get('url')}")
+        await hub.broadcast({"type": "run", **run})
+    return {"created": len(created), "signals": created}
+
+
+@app.post("/api/leads/{lead_id}/enrich")
+async def enrich_lead(lead_id: str, payload: dict | None = None):
+    """Scout(Apollo) + MX Guardian(DNS) + Verity(Clearout) on one lead."""
+    lead = store.one("leads", lead_id)
+    if not lead:
+        return JSONResponse({"error": "lead not found"}, status_code=404)
+    out: dict[str, Any] = {}
+    email = lead.get("professional_email") or ""
+    domain = email.split("@")[-1] if "@" in email else None
+
+    # Scout — Apollo enrichment
+    try:
+        names = (lead.get("full_name") or "").split(" ", 1)
+        out["apollo"] = providers.apollo_enrich(
+            first_name=names[0] if names else None,
+            last_name=names[1] if len(names) > 1 else None,
+            organization_name=lead.get("organization_name"), domain=domain, email=email or None)
+        r = store.add_run(lead["campaign_id"], "scout", "enrichment_complete", "lead", lead_id, "Apollo enrichment")
+        await hub.broadcast({"type": "run", **r})
+    except providers.ProviderError as exc:
+        out["apollo_error"] = str(exc)
+
+    # MX Guardian — DNS receiving gate
+    if domain:
+        try:
+            out["dns"] = providers.mx_lookup(domain)
+            store.update_status("leads", lead_id, "domain_validated")
+            r = store.add_run(lead["campaign_id"], "mx_guardian", "domain_validated", "lead", lead_id,
+                             f"MX {out['dns'].get('status')} for {domain}")
+            await hub.broadcast({"type": "run", **r})
+        except providers.ProviderError as exc:
+            out["dns_error"] = str(exc)
+
+    # Verity — Clearout mailbox validation
+    if email:
+        try:
+            v = providers.clearout_verify(email)
+            out["clearout"] = v
+            mapped = {"valid": "valid", "invalid": "invalid"}.get(v.get("status"), "risky")
+            store.set_field("leads", lead_id, "email_status", mapped)
+            if mapped == "valid":
+                store.update_status("leads", lead_id, "email_validated")
+            r = store.add_run(lead["campaign_id"], "verity", "email_validated", "lead", lead_id,
+                             f"Clearout: {v.get('status')}")
+            await hub.broadcast({"type": "run", **r})
+        except providers.ProviderError as exc:
+            out["clearout_error"] = str(exc)
+
+    return {"lead_id": lead_id, "results": out, "lead": store.one("leads", lead_id)}
+
+
+def _first_campaign() -> str | None:
+    camps = store.rows("campaigns", "status=?", ("active",), limit=1) or store.rows("campaigns", limit=1)
+    return camps[0]["id"] if camps else None
+
+
+def _insert_signal(campaign_id: str, query: str, res: dict) -> dict:
+    import sqlite3
+    from datetime import datetime, timezone
+    sid = "sig_" + os.urandom(5).hex()
+    row = {
+        "id": sid, "campaign_id": campaign_id, "signal_type": "Live research",
+        "title": (res.get("title") or res.get("url") or "Untitled")[:200],
+        "summary": (res.get("snippet") or "")[:500], "state": "",
+        "source_url": res.get("url") or "", "signal_date": (res.get("published") or "")[:10],
+        "status": "discovered", "score": 0, "discovered_by": "nova",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    conn = store.connect()
+    try:
+        conn.execute("INSERT INTO signals VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", tuple(row.values()))
+        conn.commit()
+    finally:
+        conn.close()
+    return row
 
 
 @app.get("/healthz")

@@ -10,6 +10,7 @@ import { AgentBuilder } from './pages/AgentBuilder'
 import { Approvals } from './pages/Approvals'
 import { LeadsSignals } from './pages/LeadsSignals'
 import { RunHistory } from './pages/RunHistory'
+import { Settings } from './pages/Settings'
 import { useBootstrap } from './hooks/useBootstrap'
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
           <Route path="/approvals" element={<Approvals />} />
           <Route path="/leads" element={<LeadsSignals />} />
           <Route path="/runs" element={<RunHistory />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </LayoutShell>
     </BrowserRouter>

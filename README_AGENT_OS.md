@@ -75,6 +75,36 @@ agent would call — Firecrawl/Exa/Apollo enrichment, Clearout email validation,
 Ollama inference, real email providers (Resend/AgentMail/SMTP). These plug into
 `juan_os/agent_os/orchestrator.py` where each pipeline step emits its run event.
 
+## Settings & appearance
+
+The **Settings** surface offers COSMIC-style **accent presets** (teal, indigo, purple,
+pink, orange, green) and **corner-roundness presets** (round / default / square), applied
+live via CSS variables and persisted locally (`frontend/src/lib/theme.ts`). Theme (light/
+dark) follows your OS and is toggleable.
+
+## Providers (real agent integrations)
+
+Agents call real providers when their key is present in `.env`, and fall back to local
+simulation otherwise. Nothing is hard-coded — see `juan_os/agent_os/providers.py` and
+`.env.example`.
+
+| Provider | Agent(s) | Env var | Purpose |
+| --- | --- | --- | --- |
+| Exa | Nova / Echo | `EXA_API_KEY` | Signal & public research |
+| Firecrawl | Delta / Forge | `FIRECRAWL_API_KEY` | Verify + scrape public pages |
+| Apollo | Scout | `APOLLO_API_KEY` | Professional enrichment |
+| Clearout | Verity | `CLEAROUT_API_KEY` | Mailbox validation |
+| DNS (dnspython) | MX Guardian | — | DNS receiving gate (no key) |
+| Warmy | Deliverability | `WARMY_API_KEY` | Inbox warmup |
+| Composio | Tool Gateway | `COMPOSIO_API_KEY` | Connected external actions |
+
+Endpoints: `GET /api/providers` (status), `POST /api/providers/test` (live key check),
+`POST /api/research/live` (Nova→Exa then Delta→Firecrawl seeds real signals),
+`POST /api/leads/{id}/enrich` (Scout→Apollo, MX Guardian→DNS, Verity→Clearout).
+
+> Security: put keys only in `.env` (gitignored). Never commit keys. MX Guardian (DNS)
+> works with no key; the HTTP providers require open outbound network access.
+
 ## Backend API
 
 | Endpoint | Purpose |

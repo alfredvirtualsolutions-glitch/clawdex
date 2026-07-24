@@ -2,7 +2,7 @@
 
 import { NavLink, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard, Workflow, Bot, CheckSquare, Radio, History,
+  LayoutDashboard, Workflow, Bot, CheckSquare, Radio, History, Settings as SettingsIcon,
   Moon, Sun, Wifi, WifiOff, Play,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -16,6 +16,7 @@ const NAV = [
   { to: '/approvals', label: 'Approvals', icon: CheckSquare },
   { to: '/leads', label: 'Leads & Signals', icon: Radio },
   { to: '/runs', label: 'Run History', icon: History },
+  { to: '/settings', label: 'Settings', icon: SettingsIcon },
 ]
 
 function titleFor(path: string) {

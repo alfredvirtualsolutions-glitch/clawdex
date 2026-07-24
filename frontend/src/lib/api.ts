@@ -43,4 +43,8 @@ export const api = {
   runs: (limit = 100) => get<{ runs: RunEvent[] }>(`/api/runs?limit=${limit}`),
   runCycle: (campaignId?: string) =>
     post<{ status: string; campaign_id: string }>('/api/orchestrator/run-cycle', { campaign_id: campaignId }),
+  providers: () =>
+    get<{ providers: { name: string; agent: string; purpose: string; env: string; configured: boolean }[] }>('/api/providers'),
+  testProvider: (name: string) =>
+    post<{ ok: boolean; result?: unknown; error?: string }>('/api/providers/test', { name }),
 }

@@ -3,12 +3,14 @@
 import { useEffect } from 'react'
 import { api } from '../lib/api'
 import { RunSocket, wsUrl } from '../lib/ws'
+import { initTheming } from '../lib/theme'
 import { useAppStore } from '../store/useAppStore'
 
 export function useBootstrap() {
   const { setCatalog, ingest, setConnected } = useAppStore()
 
   useEffect(() => {
+    initTheming()
     api.catalog().then(setCatalog).catch(() => {})
 
     const sock = new RunSocket(wsUrl())

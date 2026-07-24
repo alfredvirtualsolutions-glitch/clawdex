@@ -3,12 +3,17 @@
 
 import { create } from 'zustand'
 import type { Catalog, RunEvent, WsMessage } from '../lib/types'
+import { applyAccent, applyRound, currentAccent, currentRound } from '../lib/theme'
 
 type Theme = 'light' | 'dark'
 
 interface AppState {
   theme: Theme
   toggleTheme: () => void
+  accent: string
+  round: string
+  setAccent: (key: string) => void
+  setRound: (key: string) => void
   catalog: Catalog | null
   setCatalog: (c: Catalog) => void
   liveRuns: RunEvent[]
@@ -36,6 +41,10 @@ export const useAppStore = create<AppState>((set) => ({
       applyTheme(theme)
       return { theme }
     }),
+  accent: currentAccent(),
+  round: currentRound(),
+  setAccent: (key) => { applyAccent(key); set({ accent: key }) },
+  setRound: (key) => { applyRound(key); set({ round: key }) },
   catalog: null,
   setCatalog: (c) => set({ catalog: c }),
   liveRuns: [],
