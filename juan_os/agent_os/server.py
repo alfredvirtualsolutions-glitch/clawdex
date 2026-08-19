@@ -14,12 +14,16 @@ import json
 import os
 from typing import Any
 
+from pathlib import Path
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
-from . import catalog, llm, providers, store
+from . import catalog, llm, providers, qualification, store
 from .orchestrator import Orchestrator
+
+_QUALIFY_HTML = (Path(__file__).parent / "templates" / "qualify.html").read_text(encoding="utf-8")
 
 app = FastAPI(title="Juan OS — VBS Local Agent OS", version="0.1.0")
 app.add_middleware(
@@ -319,6 +323,29 @@ def pulse_classify(payload: dict):
     if not text:
         return JSONResponse({"error": "text required"}, status_code=400)
     return llm.pulse_classify(text)
+
+
+# --------------------------------------------------------------------------- #
+# First-party qualification landing page + form (Juan Cabezas)
+# --------------------------------------------------------------------------- #
+@app.get("/qualify", response_class=HTMLResponse)
+def qualify_page():
+    return HTMLResponse(_QUALIFY_HTML)
+
+
+@app.post("/api/qualification")
+async def qualification_submit(payload: dict):
+    if not (payload or {}).get("email") or not (payload or {}).get("state"):
+        return JSONResponse({"error": "email and state are required"}, status_code=400)
+    result = qualification.submit(payload)
+    await hub.broadcast({"type": "run", "id": "run_" + os.urandom(4).hex(),
+                         "agent_key": "sentinel", "division": "qualification",
+                         "action": "first_party_form", "record_type": "lead",
+                         "record_id": result["lead_id"], "status": "ok",
+                         "detail": f"First-party form: {result['classification']} "
+                                   f"(qual {result['qualification_score']}/40, {result['state']})",
+                         "created_at": ""})
+    return result
 
 
 @app.get("/healthz")
