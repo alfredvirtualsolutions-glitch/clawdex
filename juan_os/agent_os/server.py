@@ -20,7 +20,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from . import catalog, llm, providers, qualification, store
+from . import catalog, daily_runner, llm, providers, qualification, store
 from .orchestrator import Orchestrator
 
 _QUALIFY_HTML = (Path(__file__).parent / "templates" / "qualify.html").read_text(encoding="utf-8")
@@ -143,6 +143,17 @@ def runs(campaign_id: str | None = None, limit: int = 100):
 # --------------------------------------------------------------------------- #
 # Orchestrator control (simulated local run — no external calls)
 # --------------------------------------------------------------------------- #
+@app.post("/api/orchestrator/daily")
+async def run_daily(payload: dict | None = None):
+    """Daily Runner: run the full daily task across an advisor's active campaigns."""
+    advisor = (payload or {}).get("advisor", "Juan Cabezas")
+    summary = await daily_runner.run_daily(
+        advisor=advisor,
+        on_event=lambda e: asyncio.create_task(hub.broadcast(e)),
+    )
+    return summary
+
+
 @app.post("/api/orchestrator/run-cycle")
 async def run_cycle(payload: dict | None = None):
     campaign_id = (payload or {}).get("campaign_id")
