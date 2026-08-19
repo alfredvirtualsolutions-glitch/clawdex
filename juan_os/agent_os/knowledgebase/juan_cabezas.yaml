@@ -1,0 +1,34 @@
+# Machine-readable campaign config for the Agent OS loader.
+# Companion to juan_cabezas_kb.md. Loaded via: python -m juan_os.agent_os seed-juan
+advisor:
+  name: Juan Cabezas
+  role: Financial professional (annuity / retirement income + long-term care)
+  licensed_states: [FL, TX, CA]           # phase 1 launch set
+  calendar_link: ""                        # fill in advisor scheduling URL
+minimum_signal_score: 60                    # public-signal threshold to promote
+recency_days: 90
+daily_limits: { searches_per_state: 20, verified_signals: 40, leads_promoted: 15, sends: 25 }
+tracks:
+  - key: annuity
+    name: Annuity / Retirement Income
+    categories: [retirement_timing, rollover, pension, market_risk, income_gap, cd_maturity, business_transition, tax_concern]
+  - key: ltc
+    name: Long-Term Care
+    categories: [ltc_cost, ltc_coverage_compare, caregiver_planning, asset_protection]
+states:
+  FL:
+    profession_focus: Educators / small-business owners / retirees
+    retirement_systems: [FRS, DROP]
+    cities: [Miami, Tampa, Orlando, Jacksonville]
+  TX:
+    profession_focus: Teachers / business owners / energy & manufacturing
+    retirement_systems: [TRS of Texas, ERS of Texas]
+    cities: [Houston, Dallas, Austin, San Antonio]
+  CA:
+    profession_focus: Public employees / teachers / professionals
+    retirement_systems: [CalSTRS, CalPERS]
+    cities: [Los Angeles, San Diego, Sacramento, San Jose]
+compliance:
+  human_review_required_for: [hot]
+  never_populate: [estimated_age, estimated_assets, estimated_health, estimated_net_worth]
+  honor: [opt_out, suppression_list, per_state_licensing, channel_consent]

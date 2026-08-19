@@ -237,6 +237,42 @@ def add_run(campaign_id: str, agent_key: str, action: str, record_type: str,
     return row
 
 
+def seed_juan_cabezas() -> list[dict[str, Any]]:
+    """Load Juan Cabezas's FL/TX/CA campaigns from the knowledgebase YAML.
+
+    Idempotent: skips any state campaign that already exists. Returns the
+    campaigns now present for the advisor.
+    """
+    import yaml  # PyYAML
+
+    kb = Path(__file__).parent / "knowledgebase" / "juan_cabezas.yaml"
+    cfg = yaml.safe_load(kb.read_text())
+    adv = cfg["advisor"]
+    lic = ",".join(adv["licensed_states"])
+    minscore = int(cfg.get("minimum_signal_score", 60))
+
+    conn = connect()
+    try:
+        existing = {r["name"] for r in conn.execute(
+            "SELECT name FROM campaigns WHERE advisor_name=?", (adv["name"],)).fetchall()}
+        for state, sc in cfg["states"].items():
+            name = f"{adv['name']} — {state} retirement & LTC"
+            if name in existing:
+                continue
+            systems = ", ".join(sc.get("retirement_systems", []))
+            conn.execute(
+                "INSERT INTO campaigns VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (_uid("camp"), name, adv["name"], lic, state,
+                 sc.get("profession_focus", ""), systems, minscore, "active", _now()),
+            )
+        conn.commit()
+        rows = [dict(r) for r in conn.execute(
+            "SELECT * FROM campaigns WHERE advisor_name=? ORDER BY target_state", (adv["name"],)).fetchall()]
+    finally:
+        conn.close()
+    return rows
+
+
 def counts() -> dict[str, int]:
     conn = connect()
     try:

@@ -7,10 +7,22 @@ import argparse
 
 def main() -> int:
     parser = argparse.ArgumentParser(prog="juan_os.agent_os", description="VBS Local Agent OS backend")
+    parser.add_argument("command", nargs="?", default="serve",
+                        choices=["serve", "seed-juan"],
+                        help="serve (default) | seed-juan (load Juan Cabezas FL/TX/CA campaigns)")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8787)
     parser.add_argument("--reload", action="store_true")
     args = parser.parse_args()
+
+    if args.command == "seed-juan":
+        from . import store
+        store.init_db()
+        camps = store.seed_juan_cabezas()
+        print(f"Juan Cabezas campaigns loaded ({len(camps)}):")
+        for c in camps:
+            print(f"  [{c['target_state']}] {c['name']}  · systems: {c['target_retirement_system']}  · min score {c['minimum_signal_score']}")
+        return 0
 
     import uvicorn
 
