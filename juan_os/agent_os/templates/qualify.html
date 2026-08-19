@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Retirement &amp; Long-Term Care Review — Juan Cabezas</title>
+  <style>
+    :root{ --bg:#f6f7f9; --surface:#fff; --border:#e3e6ea; --text:#1c2430; --muted:#5b6672;
+           --accent:#1d6f7c; --accent-strong:#155560; --ok:#2f9e6f; --radius:14px;
+           --sans:"Open Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+    *{box-sizing:border-box} html,body{margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5}
+    .wrap{max-width:960px;margin:0 auto;padding:28px 20px 64px}
+    header.brand{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+    .mark{width:40px;height:40px;border-radius:10px;background:var(--accent);color:#fff;
+          display:flex;align-items:center;justify-content:center;font-weight:800}
+    .brand .n{font-weight:700} .brand .s{font-size:12px;color:var(--muted)}
+    .hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+          padding:28px;margin:16px 0;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+    h1{font-size:30px;line-height:1.15;margin:0 0 8px;text-wrap:balance}
+    .sub{color:var(--muted);font-size:17px;margin:0 0 16px}
+    .bullets{display:grid;gap:8px;margin:16px 0 0;padding:0;list-style:none}
+    .bullets li{display:flex;gap:9px;align-items:flex-start;font-size:15px}
+    .bullets li::before{content:"✓";color:var(--ok);font-weight:800}
+    .who{font-size:14px;color:var(--muted);margin-top:14px}
+    .grid{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:start}
+    @media(max-width:800px){.grid{grid-template-columns:1fr}}
+    form.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+              padding:22px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+    form h2{font-size:19px;margin:0 0 4px} form .lead{color:var(--muted);font-size:14px;margin:0 0 16px}
+    label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}
+    input,select{width:100%;padding:10px 11px;border:1px solid var(--border);border-radius:9px;
+                 font:inherit;background:#fff;color:var(--text)}
+    input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:520px){.row{grid-template-columns:1fr}}
+    .consent{display:flex;gap:9px;align-items:flex-start;margin:16px 0 6px;font-size:13px;color:var(--muted)}
+    .consent input{width:auto;margin-top:3px}
+    button{margin-top:14px;width:100%;background:var(--accent);color:#fff;border:0;border-radius:999px;
+           padding:12px;font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+    button:hover{background:var(--accent-strong)} button:disabled{opacity:.6;cursor:not-allowed}
+    .privacy{font-size:12px;color:var(--muted);margin-top:10px}
+    .disclosures{font-size:11.5px;color:var(--muted);border-top:1px solid var(--border);
+                 margin-top:26px;padding-top:14px;line-height:1.6}
+    .ok{display:none;background:#e8f6ef;border:1px solid #b8e3cf;border-radius:12px;padding:18px;margin-top:12px}
+    .ok.show{display:block}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="brand">
+      <div class="mark">JC</div>
+      <div><div class="n">Juan Cabezas</div><div class="s">Retirement income &amp; long-term care planning</div></div>
+    </header>
+
+    <div class="hero">
+      <h1>A no-pressure review of your retirement income and care options</h1>
+      <p class="sub">Answer a few quick questions and a licensed professional will help you compare your
+        options — no product is assumed to be right for everyone.</p>
+      <ul class="bullets">
+        <li>Understand your options for dependable retirement income and protecting savings</li>
+        <li>Compare pension, rollover, CD, and account-consolidation decisions</li>
+        <li>See what long-term care could cost in your state and how families plan for it</li>
+        <li>Get educational information first — a review only if you want one</li>
+      </ul>
+      <p class="who">Designed for people planning retirement or care decisions in <strong>Florida, Texas, or California</strong>.
+        We ask only for planning-stage information — never medical history, account numbers, or your Social Security number.</p>
+    </div>
+
+    <div class="grid">
+      <form class="card" id="qform">
+        <h2>Request your review</h2>
+        <p class="lead">Voluntary — answer only what you're comfortable sharing.</p>
+
+        <div class="row">
+          <div><label for="first_name">First name</label><input id="first_name" name="first_name" required></div>
+          <div><label for="email">Email</label><input id="email" name="email" type="email" required></div>
+        </div>
+        <div class="row">
+          <div><label for="state">State</label>
+            <select id="state" name="state" required>
+              <option value="">Select…</option><option>FL</option><option>TX</option><option>CA</option>
+            </select></div>
+          <div><label for="track">What are you exploring?</label>
+            <select id="track" name="track">
+              <option value="annuity">Retirement income / protection</option>
+              <option value="ltc">Long-term care planning</option>
+              <option value="both">Both</option>
+            </select></div>
+        </div>
+
+        <label for="age_range">Age range</label>
+        <select id="age_range" name="age_range">
+          <option>Under 50</option><option>50-54</option><option>55-59</option><option>60-64</option>
+          <option>65-69</option><option>70-75</option><option>Over 75</option><option>Prefer not to answer</option>
+        </select>
+
+        <label for="retirement_timing">When do you expect to retire?</label>
+        <select id="retirement_timing" name="retirement_timing">
+          <option>Already retired</option><option>Within 12 months</option><option>1-3 years</option>
+          <option>4-7 years</option><option>More than 7 years</option><option>Not sure</option>
+        </select>
+
+        <label for="planning_amount">Approx. amount you're considering for income or protection planning</label>
+        <select id="planning_amount" name="planning_amount">
+          <option>Under $50,000</option><option>$50,000-$99,999</option><option>$100,000-$249,999</option>
+          <option>$250,000-$499,999</option><option>$500,000-$999,999</option><option>$1 million+</option>
+          <option>Prefer not to answer</option>
+        </select>
+
+        <label for="biggest_concern">Your biggest concern</label>
+        <select id="biggest_concern" name="biggest_concern">
+          <option>Market losses</option><option>Running out of money</option><option>Creating dependable income</option>
+          <option>Low returns</option><option>Taxes</option><option>Inflation</option>
+          <option>Understanding pension options</option><option>Consolidating retirement accounts</option>
+        </select>
+
+        <label for="want_review">Would you like a licensed professional to review your options?</label>
+        <select id="want_review" name="want_review">
+          <option>Yes</option><option>Not yet — send educational information</option><option>No</option>
+        </select>
+
+        <label class="consent">
+          <input type="checkbox" id="consent" name="consent">
+          <span>I agree to receive planning-related communications from Juan Cabezas and understand I can opt out at any time. View Privacy Policy.</span>
+        </label>
+
+        <button type="submit" id="submit">Request my review</button>
+        <p class="privacy">We respect your privacy. No obligation. This form does not collect medical history,
+          account numbers, or Social Security numbers.</p>
+
+        <div class="ok" id="ok"></div>
+
+        <div class="disclosures">
+          Juan Cabezas is a licensed insurance/financial professional. This page is educational and is not a
+          recommendation, an offer, or advice for your specific situation. Guarantees on insurance products
+          depend on the claims-paying ability of the issuing insurer and on contract terms (including caps,
+          participation rates, fees, riders, elimination/surrender periods, and underwriting). Long-term care
+          and annuity products are not FDIC-insured and are not guaranteed by any government agency. A licensed
+          advisor will review suitability before any recommendation. Required licensing, carrier, state, and
+          privacy disclosures apply.
+        </div>
+      </form>
+
+      <div class="hero" style="margin-top:0">
+        <h2 style="font-size:17px;margin:0 0 8px">What happens next</h2>
+        <ul class="bullets" style="font-size:14px">
+          <li>Your answers are used only to prepare your review</li>
+          <li>You'll receive education-first information for your state</li>
+          <li>If you asked for a review, we'll offer a short discovery call</li>
+          <li>A licensed advisor confirms suitability — nothing is assumed</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  const f = document.getElementById('qform'), ok = document.getElementById('ok'), btn = document.getElementById('submit');
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(f).entries());
+    data.consent = document.getElementById('consent').checked;
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      const r = await fetch('/api/qualification', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+      const j = await r.json();
+      ok.classList.add('show');
+      ok.innerHTML = `<strong>Thank you, ${data.first_name || 'there'}.</strong><br>` +
+        (data.want_review === 'Yes'
+          ? 'Your request was received. A licensed professional will follow up about a short, no-obligation review.'
+          : "Your request was received. We'll send education-first information for your state.");
+      f.querySelectorAll('input,select,button').forEach(el => el.disabled = true);
+    } catch (err) {
+      ok.classList.add('show'); ok.style.background = '#fbeaea'; ok.style.borderColor = '#e6bcbc';
+      ok.textContent = 'Sorry — something went wrong submitting the form. Please try again.';
+      btn.disabled = false; btn.textContent = 'Request my review';
+    }
+  });
+  </script>
+</body>
+</html>

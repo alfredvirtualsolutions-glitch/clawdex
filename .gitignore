@@ -31,8 +31,19 @@ dist/
 dist
 
 # Environment files (comprehensive coverage)
+.env
+.env.local
+.env.*.local
 *token.json*
 *credentials.json*
+
+# Juan OS local exports
+juan_analytics.html
+
+# Agent OS local database
+juan_os/agent_os/*.db
+juan_os/agent_os/*.db-wal
+juan_os/agent_os/*.db-shm
 
 # Logs and debug files
 npm-debug.log*

@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light dark;
+  /* Default accent = COSMIC teal (RGB triplets for Tailwind alpha support).
+     lib/theme.ts overrides these live from the Settings surface. */
+  --brand-50: 233 250 251; --brand-100: 201 240 244; --brand-200: 163 228 234;
+  --brand-300: 126 215 223; --brand-400: 95 200 210; --brand-500: 72 185 199;
+  --brand-600: 62 159 171; --brand-700: 50 129 139; --brand-800: 40 102 110;
+  --brand-900: 30 78 84;
+  --radius-lg: 0.625rem; --radius-xl: 0.875rem; --radius-2xl: 1.15rem;
+}
+
+@layer base {
+  body {
+    /* COSMIC light: warm-neutral canvas */
+    @apply bg-slate-50 text-slate-800 antialiased;
+  }
+  .dark body {
+    /* COSMIC dark: #1b1b1b base */
+    @apply bg-slate-950 text-slate-100;
+  }
+}
+
+@layer components {
+  .card {
+    /* COSMIC container — rounded, quiet border, soft shadow */
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  }
+  .dark .card {
+    /* COSMIC surface #292929 on #1b1b1b */
+    @apply border-slate-800 bg-slate-900;
+  }
+  .muted { @apply text-slate-500 dark:text-slate-400; }
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+}
+
+/* React Flow theming */
+.react-flow__background { background: transparent; }
+.dark .react-flow__background { background: #1b1b1b; }
+.react-flow__attribution { display: none; }
+.react-flow__controls button {
+  border-radius: 8px;
+  background: #fff;
+}
+.dark .react-flow__controls button {
+  background: #2e2e2e;
+  border-color: #3a3a3a;
+  color: #e4e4e4;
+}

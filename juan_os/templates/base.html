@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Juan Operating System{% endblock %}</title>
+  {% block head_extra %}{% endblock %}
+  <style>
+    :root { --bg:#0a0a1a; --panel:rgba(10,10,26,.7); --line:rgba(168,85,247,.2);
+            --text:#e5e7eb; --muted:#9ca3af; --purple:#a855f7; --cyan:#06b6d4;
+            --green:#22c55e; --orange:#f97316; --red:#ef4444; --blue:#3b82f6; --yellow:#eab308; }
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,
+           BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:14px;
+           line-height:1.4; -webkit-font-smoothing:antialiased; }
+    a { color:inherit; text-decoration:none; }
+    .mono { font-family:'Geist Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace; }
+
+    /* Neon utilities (ported from app/globals.css) */
+    .glass { background:var(--panel); backdrop-filter:blur(10px);
+             border:1px solid var(--line); }
+    .glow-purple { box-shadow:0 0 10px rgba(168,85,247,.3),0 0 20px rgba(168,85,247,.2),0 0 30px rgba(168,85,247,.1); }
+    .glow-cyan   { box-shadow:0 0 10px rgba(6,182,212,.3),0 0 20px rgba(6,182,212,.2),0 0 30px rgba(6,182,212,.1); }
+    .glow-green  { box-shadow:0 0 10px rgba(34,197,94,.3),0 0 20px rgba(34,197,94,.2),0 0 30px rgba(34,197,94,.1); }
+    .text-gradient { background:linear-gradient(135deg,#a855f7 0%,#06b6d4 100%);
+                     -webkit-background-clip:text; background-clip:text;
+                     -webkit-text-fill-color:transparent; }
+    .hexagon { clip-path:polygon(30% 0%,70% 0%,100% 50%,70% 100%,30% 100%,0% 50%); }
+
+    /* Layout */
+    .layout { display:flex; min-height:100vh; }
+    .sidebar { width:240px; flex-shrink:0; border-right:1px solid var(--line);
+               padding:20px 16px; position:sticky; top:0; height:100vh;
+               display:flex; flex-direction:column; }
+    .brand { display:flex; align-items:center; gap:12px; margin-bottom:28px; }
+    .brand .mark { width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+                   background:linear-gradient(135deg,var(--purple),var(--cyan)); font-weight:800; font-size:20px; }
+    .brand .name { font-weight:700; letter-spacing:.02em; }
+    nav { display:flex; flex-direction:column; gap:6px; }
+    nav .item { padding:10px 14px; border-radius:10px; color:var(--muted); font-weight:500;
+                display:flex; align-items:center; gap:10px; }
+    nav .item.active { background:rgba(168,85,247,.15); color:var(--purple); }
+    .sys-status { margin-top:auto; }
+    .dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+    .pulse { animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .main { flex:1; padding:28px 32px; min-width:0; }
+    .header h1 { font-size:44px; line-height:1.05; font-weight:800; margin:0 0 6px;
+                 letter-spacing:-.02em; }
+    .header p { color:var(--muted); font-size:16px; margin:0; }
+
+    .grid { display:grid; gap:16px; }
+    .stats { grid-template-columns:repeat(5,1fr); margin:26px 0; }
+    .cols3 { grid-template-columns:1fr 1fr 1fr; margin-bottom:26px; }
+    .cols4 { grid-template-columns:repeat(4,1fr); margin-bottom:26px; }
+    @media (max-width:1100px){ .stats{grid-template-columns:repeat(2,1fr)} .cols3,.cols4{grid-template-columns:1fr} }
+    @media (max-width:760px){ .sidebar{display:none} .stats{grid-template-columns:1fr} .main{padding:20px} .header h1{font-size:32px} }
+
+    .card { border-radius:12px; padding:20px; }
+    .card h3 { margin:0 0 14px; font-size:18px; font-weight:700; }
+    .eyebrow { font-size:13px; color:var(--muted); }
+    .value { font-size:30px; font-weight:800; margin-top:4px; }
+    .row-between { display:flex; align-items:center; justify-content:space-between; }
+
+    .badge { display:inline-block; font-size:11px; padding:2px 8px; border-radius:6px; font-weight:600; }
+    .b-purple{background:rgba(168,85,247,.15);color:var(--purple)}
+    .b-cyan{background:rgba(6,182,212,.15);color:var(--cyan)}
+    .b-green{background:rgba(34,197,94,.15);color:var(--green)}
+    .b-blue{background:rgba(59,130,246,.15);color:var(--blue)}
+    .b-orange{background:rgba(249,115,22,.15);color:var(--orange)}
+    .b-yellow{background:rgba(234,179,8,.15);color:var(--yellow)}
+    .b-red{background:rgba(239,68,68,.15);color:var(--red)}
+    .b-gray{background:rgba(107,114,128,.2);color:#9ca3af}
+
+    .feed { display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto; }
+    .feed-item { border-radius:10px; padding:12px; border:1px solid rgba(6,182,212,.18); }
+    .progress { height:8px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:8px; }
+    .progress > span { display:block; height:100%; background:linear-gradient(90deg,var(--purple),var(--cyan)); }
+
+    .terminal { font-family:'Geist Mono',ui-monospace,monospace; }
+    .terminal .screen { background:rgba(0,0,0,.5); border-radius:10px; padding:16px; font-size:13px; color:var(--green); }
+    .terminal .k { color:var(--muted); }
+
+    .pipe { display:flex; align-items:center; gap:12px; padding:6px 0; }
+    .pipe .lbl { flex:1; color:var(--muted); }
+    .pipe .num { font-weight:700; }
+
+    .arch { text-align:center; }
+    .arch .ico { width:56px; height:56px; margin:0 auto 12px; display:flex; align-items:center;
+                 justify-content:center; font-size:24px;
+                 background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(6,182,212,.2)); }
+    .arch h4 { margin:0 0 6px; font-size:15px; }
+    .arch p { margin:0; font-size:12px; color:var(--muted); }
+
+    .footer { text-align:center; color:var(--muted); font-size:13px; margin-top:8px; }
+    .stamp { color:var(--muted); font-size:12px; }
+    .empty { color:#6b7280; font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="mark hexagon glow-purple">J</div>
+        <div class="name">JUAN OS</div>
+      </div>
+      <nav>
+        {% set nav = ['Overview','Workflows','Agents','Signals','Leads','Outreach','Memory','Settings'] %}
+        {% for item in nav %}
+        <div class="item {% if loop.first %}active{% endif %}">{{ item }}</div>
+        {% endfor %}
+      </nav>
+      <div class="sys-status">
+        <div class="card glass" style="border-color:rgba(34,197,94,.3);padding:14px">
+          <span class="dot pulse glow-green" style="background:var(--green)"></span>
+          <span style="color:var(--green);margin-left:8px">All Systems Operational</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="header">
+        <h1 class="text-gradient">Juan Operating System</h1>
+        <p>Neon-backed agent OS with tools, guardrails, chassis, and command UI.</p>
+        {% block subtitle_note %}{% endblock %}
+      </div>
+
+      <!-- Stat cards -->
+      <div class="grid stats">
+        {% set health_glow = 'glow-green' if stats.systemHealth == 'Excellent' else '' %}
+        {% for s in [
+          {'t':'Agents Online','v':stats.agentsOnline,'g':'glow-purple','c':'var(--purple)'},
+          {'t':'Workflows Running','v':stats.workflowsRunning,'g':'glow-cyan','c':'var(--cyan)'},
+          {'t':'Signals Today','v':stats.signalsToday,'g':'glow-green','c':'var(--green)'},
+          {'t':'Success Rate','v':(stats.successRate|string) ~ '%','g':'','c':'var(--orange)'},
+          {'t':'System Health','v':stats.systemHealth,'g':health_glow,'c':'var(--green)' if stats.systemHealth=='Excellent' else 'var(--red)'} ] %}
+        <div class="card glass {{ s.g }}">
+          <div class="row-between"><span class="eyebrow">{{ s.t }}</span></div>
+          <div class="value" style="color:{{ s.c }}">{{ s.v }}</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Workflows / Signals / Terminal -->
+      <div class="grid cols3">
+        <div class="card glass">
+          <div class="row-between"><h3 style="color:var(--purple)">Active Workflows</h3></div>
+          <div class="feed">
+            {% for w in workflows %}
+            <div class="feed-item">
+              <div class="row-between">
+                <span style="font-weight:600">{{ w.name }}</span>
+                <span class="badge {{ 'b-green' if w.status=='running' else 'b-blue' if w.status=='completed' else 'b-red' }}">{{ w.status }}</span>
+              </div>
+              <div style="margin-top:6px"><span class="badge b-purple">{{ w.type }}</span></div>
+              <div class="progress"><span style="width:{{ w.progress }}%"></span></div>
+              <span class="stamp mono">{{ w.progress }}%</span>
+            </div>
+            {% else %}
+            <p class="empty">No active workflows</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="card glass">
+          <div class="row-between"><h3 style="color:var(--cyan)">Live Signal Feed</h3></div>
+          <div class="feed">
+            {% for s in signals %}
+            <div class="feed-item" style="border-color:rgba(168,85,247,.18)">
+              <div class="row-between">
+                <div>
+                  <div style="font-weight:600;margin-bottom:4px">{{ s.title }}</div>
+                  <span class="badge b-cyan">{{ s.campaign }}</span>
+                </div>
+                <span class="badge {{ 'b-orange' if s.score=='Hot' else 'b-yellow' if s.score=='Moderate' else 'b-gray' }}">
+                  {% if s.score=='Hot' %}🔥 {% endif %}{{ s.score }}
+                </span>
+              </div>
+              <span class="stamp">{{ s.timeAgo }}</span>
+            </div>
+            {% else %}
+            <p class="empty">No signals detected</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="card glass terminal">
+          <div class="row-between"><h3 style="color:var(--green)">Terminal</h3></div>
+          <div class="screen">
+            <div><span style="color:var(--cyan)">juan@command</span>:<span style="color:var(--blue)">~</span>$ status</div>
+            <div style="margin-top:8px;color:#d1d5db">
+              <div><span class="k">System&nbsp;&nbsp;&nbsp;:</span> <span style="color:var(--green)">Operational</span></div>
+              <div><span class="k">Agents&nbsp;&nbsp;&nbsp;:</span> <span style="color:var(--purple)">{{ stats.agentsOnline }}</span> online</div>
+              <div><span class="k">Signals&nbsp;&nbsp;:</span> <span style="color:var(--cyan)">{{ stats.signalsToday }}</span> today</div>
+              <div><span class="k">Leads&nbsp;&nbsp;&nbsp;&nbsp;:</span> <span style="color:var(--yellow)">{{ pipeline.get('signals', 0) }}</span> total</div>
+              <div><span class="k">Success&nbsp;&nbsp;:</span> <span style="color:var(--green)">{{ stats.successRate }}%</span></div>
+            </div>
+            <div style="margin-top:12px"><span style="color:var(--cyan)">juan@command</span>:<span style="color:var(--blue)">~</span>$ <span class="pulse">_</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analytics -->
+      <div class="grid cols4">
+        <div class="card glass"><h3 style="color:var(--purple);font-size:15px">Signals by Campaign</h3>{{ campaign_chart }}</div>
+        <div class="card glass"><h3 style="color:var(--cyan);font-size:15px">Signal Classification</h3>{{ classification_chart }}</div>
+        <div class="card glass">
+          <h3 style="color:var(--green);font-size:15px">Leads Pipeline</h3>
+          {% for p in [
+            {'l':'Signals','k':'signals','c':'var(--purple)'},
+            {'l':'Named','k':'named','c':'var(--cyan)'},
+            {'l':'Enriched','k':'enriched','c':'var(--green)'},
+            {'l':'Valid Email','k':'valid_email','c':'var(--orange)'},
+            {'l':'Contacted','k':'contacted','c':'var(--blue)'} ] %}
+          <div class="pipe">
+            <span class="dot" style="background:{{ p.c }}"></span>
+            <span class="lbl">{{ p.l }}</span>
+            <span class="num mono">{{ pipeline.get(p.k, 0) }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="card glass"><h3 style="color:var(--orange);font-size:15px">Daily Signal Trend</h3>{{ trend_chart }}</div>
+      </div>
+
+      <!-- Architecture strip -->
+      <div class="grid cols4">
+        {% for a in [
+          {'i':'🗄️','t':'Neon Database Backend','d':'secure data layer, tables, signals, workflows','c':'rgba(168,85,247,.3)','tc':'var(--purple)'},
+          {'i':'🔧','t':'Tools','d':'connectors, scraping, enrichment, automation','c':'rgba(6,182,212,.3)','tc':'var(--cyan)'},
+          {'i':'🛡️','t':'Guardrails','d':'safety rules, permissions, validation, compliance','c':'rgba(34,197,94,.3)','tc':'var(--green)'},
+          {'i':'⚙️','t':'Chassis','d':'orchestration engine, workflow runtime, scheduling, memory','c':'rgba(249,115,22,.3)','tc':'var(--orange)'} ] %}
+        <div class="card glass arch" style="border-color:{{ a.c }}">
+          <div class="ico hexagon">{{ a.i }}</div>
+          <h4 style="color:{{ a.tc }}">{{ a.t }}</h4>
+          <p>{{ a.d }}</p>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="footer">
+        Built to orchestrate signal-driven workflows from search to action.
+        <div class="stamp" style="margin-top:6px">{% block footer_stamp %}Generated {{ generated_at }}{% endblock %}</div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

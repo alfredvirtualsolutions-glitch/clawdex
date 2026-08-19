@@ -6,11 +6,13 @@ Tests all dashboard endpoints for proper functionality and data structure
 
 import requests
 import json
+import os
 import sys
 from typing import Dict, Any
 
-# Base URL from environment
-BASE_URL = "https://neon-dashboard-54.preview.emergentagent.com/api"
+# Base URL from environment (override to test the local Python app, e.g.
+#   BASE_URL=http://127.0.0.1:8000/api python backend_test.py)
+BASE_URL = os.environ.get("BASE_URL", "https://neon-dashboard-54.preview.emergentagent.com/api")
 
 class Colors:
     GREEN = '\033[92m'
