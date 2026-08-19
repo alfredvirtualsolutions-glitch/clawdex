@@ -7,6 +7,8 @@ agents (Scribe, Pulse, Compass) call — swap it with one env var, no code chang
     LLM_BACKEND=ollama      # local-first, default (http://localhost:11434)
     LLM_BACKEND=openai      # any OpenAI-compatible API (OpenAI, Groq, Together,
                             # OpenRouter, LM Studio, vLLM) via OPENAI_BASE_URL
+    LLM_BACKEND=pokee       # Pokee agent model (pokee-isaac), OpenAI-compatible
+    LLM_BACKEND=gemini      # Google Gemini (generativelanguage API)
     LLM_BACKEND=anthropic   # Claude via the official Anthropic SDK
 
 Keys/URLs come from the environment (.env). When the selected backend isn't
@@ -53,6 +55,10 @@ def model_name() -> str:
         return os.environ.get("OLLAMA_MODEL", "llama3.1")
     if b == "openai":
         return os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+    if b == "pokee":
+        return os.environ.get("POKEE_MODEL", "pokee-isaac")
+    if b == "gemini":
+        return os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
     if b == "anthropic":
         # Default to the latest, most capable Claude model; override via env.
         return os.environ.get("ANTHROPIC_MODEL", "claude-opus-5")
@@ -65,6 +71,10 @@ def available() -> bool:
         return bool(os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434"))
     if b == "openai":
         return bool(os.environ.get("OPENAI_API_KEY", "").strip())
+    if b == "pokee":
+        return bool(os.environ.get("POKEE_API_KEY", "").strip())
+    if b == "gemini":
+        return bool(os.environ.get("GEMINI_API_KEY", "").strip())
     if b == "anthropic":
         return bool(os.environ.get("ANTHROPIC_API_KEY", "").strip())
     return False
@@ -85,9 +95,13 @@ def chat(prompt: str, *, system: str | None = None, max_tokens: int = 800,
         return _ollama(prompt, system, max_tokens, temperature)
     if b == "openai":
         return _openai(prompt, system, max_tokens, temperature)
+    if b == "pokee":
+        return _pokee(prompt, system, max_tokens, temperature)
+    if b == "gemini":
+        return _gemini(prompt, system, max_tokens)
     if b == "anthropic":
         return _anthropic(prompt, system, max_tokens)
-    raise LLMUnavailable(f"Unknown LLM_BACKEND '{b}'. Use ollama | openai | anthropic.")
+    raise LLMUnavailable(f"Unknown LLM_BACKEND '{b}'. Use ollama | openai | pokee | gemini | anthropic.")
 
 
 # --------------------------------------------------------------------------- #
@@ -116,16 +130,16 @@ def _ollama(prompt: str, system: str | None, max_tokens: int, temperature: float
 # --------------------------------------------------------------------------- #
 # OpenAI-compatible — POST {base}/chat/completions
 # --------------------------------------------------------------------------- #
-def _openai(prompt: str, system: str | None, max_tokens: int, temperature: float | None) -> str:
+def _openai_compat(prompt: str, system: str | None, max_tokens: int, temperature: float | None,
+                   *, base: str, key: str, model: str, label: str) -> str:
     if httpx is None:
         raise LLMError("httpx not installed.")
-    key = os.environ.get("OPENAI_API_KEY", "").strip()
     if not key:
-        raise LLMUnavailable("OPENAI_API_KEY not set.")
-    base = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
+        raise LLMUnavailable(f"{label} API key not set.")
+    base = base.rstrip("/")
     messages = ([{"role": "system", "content": system}] if system else []) + \
                [{"role": "user", "content": prompt}]
-    body: dict[str, Any] = {"model": model_name(), "messages": messages, "max_tokens": max_tokens}
+    body: dict[str, Any] = {"model": model, "messages": messages, "max_tokens": max_tokens}
     if temperature is not None:
         body["temperature"] = temperature
     try:
@@ -135,7 +149,81 @@ def _openai(prompt: str, system: str | None, max_tokens: int, temperature: float
             r.raise_for_status()
             return r.json()["choices"][0]["message"]["content"].strip()
     except httpx.HTTPError as exc:
-        raise LLMError(f"OpenAI-compatible request failed: {exc}") from exc
+        raise LLMError(f"{label} request failed: {exc}") from exc
+
+
+def _openai(prompt: str, system: str | None, max_tokens: int, temperature: float | None) -> str:
+    return _openai_compat(prompt, system, max_tokens, temperature,
+                          base=os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+                          key=os.environ.get("OPENAI_API_KEY", "").strip(),
+                          model=model_name(), label="OpenAI")
+
+
+# --------------------------------------------------------------------------- #
+# Pokee — agent model (pokee-isaac), OpenAI-compatible endpoint
+# --------------------------------------------------------------------------- #
+def _pokee(prompt: str, system: str | None, max_tokens: int, temperature: float | None) -> str:
+    return _openai_compat(prompt, system, max_tokens, temperature,
+                          base=os.environ.get("POKEE_BASE_URL", "https://api.pokee.ai/v1"),
+                          key=os.environ.get("POKEE_API_KEY", "").strip(),
+                          model=model_name(), label="Pokee")
+
+
+# --------------------------------------------------------------------------- #
+# Google Gemini — generativelanguage API (native)
+# --------------------------------------------------------------------------- #
+def _gemini(prompt: str, system: str | None, max_tokens: int, model: str | None = None) -> str:
+    if httpx is None:
+        raise LLMError("httpx not installed.")
+    key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not key:
+        raise LLMUnavailable("GEMINI_API_KEY not set.")
+    base = os.environ.get("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta").rstrip("/")
+    model = model or os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
+    body: dict[str, Any] = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"maxOutputTokens": max_tokens},
+    }
+    if system:
+        body["systemInstruction"] = {"parts": [{"text": system}]}
+    try:
+        with httpx.Client(timeout=TIMEOUT) as c:
+            r = c.post(f"{base}/models/{model}:generateContent",
+                       headers={"x-goog-api-key": key, "content-type": "application/json"}, json=body)
+            r.raise_for_status()
+            data = r.json()
+        parts = (((data.get("candidates") or [{}])[0].get("content") or {}).get("parts") or [])
+        return "".join(p.get("text", "") for p in parts).strip()
+    except httpx.HTTPError as exc:
+        raise LLMError(f"Gemini request failed: {exc}") from exc
+
+
+# --------------------------------------------------------------------------- #
+# Backend-independent tier calls — used by the task router, which always
+# prefers Pokee for complex reasoning and Gemini for high-volume processing,
+# regardless of the single-backend LLM_BACKEND setting.
+# --------------------------------------------------------------------------- #
+def pokee_available() -> bool:
+    return bool(os.environ.get("POKEE_API_KEY", "").strip())
+
+
+def gemini_available() -> bool:
+    return bool(os.environ.get("GEMINI_API_KEY", "").strip())
+
+
+def pokee_chat(prompt: str, *, system: str | None = None, max_tokens: int = 800,
+               temperature: float | None = None) -> str:
+    """Call Pokee (pokee-isaac) directly — the primary reasoning tier."""
+    return _openai_compat(prompt, system, max_tokens, temperature,
+                          base=os.environ.get("POKEE_BASE_URL", "https://api.pokee.ai/v1"),
+                          key=os.environ.get("POKEE_API_KEY", "").strip(),
+                          model=os.environ.get("POKEE_MODEL", "pokee-isaac"), label="Pokee")
+
+
+def gemini_chat(prompt: str, *, system: str | None = None, max_tokens: int = 800) -> str:
+    """Call Gemini Flash directly — the secondary / high-volume processing tier."""
+    return _gemini(prompt, system, max_tokens,
+                   model=os.environ.get("GEMINI_MODEL", "gemini-flash-latest"))
 
 
 # --------------------------------------------------------------------------- #

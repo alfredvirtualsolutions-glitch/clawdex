@@ -20,7 +20,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from . import catalog, llm, providers, qualification, store
+from . import catalog, daily_runner, llm, providers, qualification, router, store
 from .orchestrator import Orchestrator
 
 _QUALIFY_HTML = (Path(__file__).parent / "templates" / "qualify.html").read_text(encoding="utf-8")
@@ -143,6 +143,17 @@ def runs(campaign_id: str | None = None, limit: int = 100):
 # --------------------------------------------------------------------------- #
 # Orchestrator control (simulated local run — no external calls)
 # --------------------------------------------------------------------------- #
+@app.post("/api/orchestrator/daily")
+async def run_daily(payload: dict | None = None):
+    """Daily Runner: run the full daily task across an advisor's active campaigns."""
+    advisor = (payload or {}).get("advisor", "Juan Cabezas")
+    summary = await daily_runner.run_daily(
+        advisor=advisor,
+        on_event=lambda e: asyncio.create_task(hub.broadcast(e)),
+    )
+    return summary
+
+
 @app.post("/api/orchestrator/run-cycle")
 async def run_cycle(payload: dict | None = None):
     campaign_id = (payload or {}).get("campaign_id")
@@ -323,6 +334,44 @@ def pulse_classify(payload: dict):
     if not text:
         return JSONResponse({"error": "text required"}, status_code=400)
     return llm.pulse_classify(text)
+
+
+# --------------------------------------------------------------------------- #
+# Task Router — Pokee reasons · Gemini processes · code decides · human approves
+# --------------------------------------------------------------------------- #
+@app.get("/api/router/status")
+def router_status():
+    """Tier availability for the complexity-based task router."""
+    return {"complex_tier": "pokee", "simple_tier": "gemini",
+            "pokee_configured": llm.pokee_available(),
+            "gemini_configured": llm.gemini_available()}
+
+
+@app.post("/api/router/process-signal")
+async def router_process_signal(payload: dict):
+    """Run one signal through reason→validate→(persist|human): the OS spine.
+
+    Body: {"signal_id": "..."} (loads the stored signal + its campaign) or an
+    inline {"signal": {...}, "campaign": {...}}.
+    """
+    payload = payload or {}
+    sig = store.one("signals", payload["signal_id"]) if payload.get("signal_id") else payload.get("signal")
+    if not sig:
+        return JSONResponse({"error": "signal_id or inline signal required"}, status_code=400)
+    camp = payload.get("campaign")
+    if not camp and sig.get("campaign_id"):
+        camp = store.one("campaigns", sig["campaign_id"])
+    if not camp:
+        return JSONResponse({"error": "campaign not found for signal"}, status_code=404)
+
+    known = {r["source_url"] for r in store.rows("signals", "campaign_id=?", (camp["id"],))
+             if r.get("source_url") and r.get("id") != sig.get("id")}
+    result = router.process_signal(sig, camp, known_source_urls=known,
+                                   persist=bool(payload.get("signal_id")))
+    if payload.get("signal_id"):
+        await hub.broadcast({"type": "run", "agent_key": "compass", "action": "route",
+                             "detail": f"router → {result['outcome']}", "campaign_id": camp["id"]})
+    return result
 
 
 # --------------------------------------------------------------------------- #
