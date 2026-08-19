@@ -172,13 +172,14 @@ def _pokee(prompt: str, system: str | None, max_tokens: int, temperature: float 
 # --------------------------------------------------------------------------- #
 # Google Gemini — generativelanguage API (native)
 # --------------------------------------------------------------------------- #
-def _gemini(prompt: str, system: str | None, max_tokens: int) -> str:
+def _gemini(prompt: str, system: str | None, max_tokens: int, model: str | None = None) -> str:
     if httpx is None:
         raise LLMError("httpx not installed.")
     key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not key:
         raise LLMUnavailable("GEMINI_API_KEY not set.")
     base = os.environ.get("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta").rstrip("/")
+    model = model or os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
     body: dict[str, Any] = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"maxOutputTokens": max_tokens},
@@ -187,7 +188,7 @@ def _gemini(prompt: str, system: str | None, max_tokens: int) -> str:
         body["systemInstruction"] = {"parts": [{"text": system}]}
     try:
         with httpx.Client(timeout=TIMEOUT) as c:
-            r = c.post(f"{base}/models/{model_name()}:generateContent",
+            r = c.post(f"{base}/models/{model}:generateContent",
                        headers={"x-goog-api-key": key, "content-type": "application/json"}, json=body)
             r.raise_for_status()
             data = r.json()
@@ -195,6 +196,34 @@ def _gemini(prompt: str, system: str | None, max_tokens: int) -> str:
         return "".join(p.get("text", "") for p in parts).strip()
     except httpx.HTTPError as exc:
         raise LLMError(f"Gemini request failed: {exc}") from exc
+
+
+# --------------------------------------------------------------------------- #
+# Backend-independent tier calls — used by the task router, which always
+# prefers Pokee for complex reasoning and Gemini for high-volume processing,
+# regardless of the single-backend LLM_BACKEND setting.
+# --------------------------------------------------------------------------- #
+def pokee_available() -> bool:
+    return bool(os.environ.get("POKEE_API_KEY", "").strip())
+
+
+def gemini_available() -> bool:
+    return bool(os.environ.get("GEMINI_API_KEY", "").strip())
+
+
+def pokee_chat(prompt: str, *, system: str | None = None, max_tokens: int = 800,
+               temperature: float | None = None) -> str:
+    """Call Pokee (pokee-isaac) directly — the primary reasoning tier."""
+    return _openai_compat(prompt, system, max_tokens, temperature,
+                          base=os.environ.get("POKEE_BASE_URL", "https://api.pokee.ai/v1"),
+                          key=os.environ.get("POKEE_API_KEY", "").strip(),
+                          model=os.environ.get("POKEE_MODEL", "pokee-isaac"), label="Pokee")
+
+
+def gemini_chat(prompt: str, *, system: str | None = None, max_tokens: int = 800) -> str:
+    """Call Gemini Flash directly — the secondary / high-volume processing tier."""
+    return _gemini(prompt, system, max_tokens,
+                   model=os.environ.get("GEMINI_MODEL", "gemini-flash-latest"))
 
 
 # --------------------------------------------------------------------------- #

@@ -237,6 +237,23 @@ def add_run(campaign_id: str, agent_key: str, action: str, record_type: str,
     return row
 
 
+def add_approval(campaign_id: str, record_type: str, record_id: str, title: str,
+                 reason: str, requested_by: str, status: str = "pending") -> dict[str, Any]:
+    """Queue a record for human advisor approval (the 'Human approves' step)."""
+    row = {
+        "id": _uid("appr"), "campaign_id": campaign_id, "record_type": record_type,
+        "record_id": record_id, "title": title, "reason": reason,
+        "requested_by": requested_by, "status": status, "created_at": _now(),
+    }
+    conn = connect()
+    try:
+        conn.execute("INSERT INTO approvals VALUES (?,?,?,?,?,?,?,?,?)", tuple(row.values()))
+        conn.commit()
+    finally:
+        conn.close()
+    return row
+
+
 def seed_juan_cabezas() -> list[dict[str, Any]]:
     """Load Juan Cabezas's FL/TX/CA campaigns from the knowledgebase YAML.
 
