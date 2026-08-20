@@ -63,6 +63,16 @@ the Workflow Canvas, and events stream live into Command Center and Run History.
 cd frontend && npm run build           # outputs frontend/dist (static, deployable)
 ```
 
+### Share on Cloudflare's edge (local-first)
+Keep the OS on your machine and put a live Cloudflare URL in front of it — no code
+changes. Start the API, then open a tunnel in a second terminal:
+```bash
+make serve             # http://127.0.0.1:8787
+make tunnel            # prints a live https://<random>.trycloudflare.com URL
+```
+For your own domain (persistent URL) and optional Cloudflare Access login, see
+[`cloudflared/README.md`](cloudflared/README.md).
+
 ## What's real vs. what's a seam
 
 **Real & runnable now:** the full architecture, the 26-agent catalog, the

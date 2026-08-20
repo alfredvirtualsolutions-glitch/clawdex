@@ -45,6 +45,11 @@ juan_os/agent_os/*.db
 juan_os/agent_os/*.db-wal
 juan_os/agent_os/*.db-shm
 
+# Cloudflare Tunnel — never commit the real config or credentials
+cloudflared/config.yml
+cloudflared/*.json
+cert.pem
+
 # Logs and debug files
 npm-debug.log*
 yarn-debug.log*
