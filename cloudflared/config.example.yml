@@ -1,0 +1,22 @@
+# Named Cloudflare Tunnel for Juan Cabezas OS.
+#
+# Copy this to `cloudflared/config.yml` and fill in the two values marked
+# CHANGE-ME. `config.yml` and the *.json credentials file are gitignored — do
+# NOT commit them. See cloudflared/README.md for the full walkthrough.
+
+# The tunnel's UUID (printed by `make tunnel-create`, i.e.
+# `cloudflared tunnel create juan-os`). You can also use the tunnel name.
+tunnel: CHANGE-ME-tunnel-uuid
+
+# Path to the tunnel credentials file created alongside it. cloudflared writes
+# it to ~/.cloudflared/<UUID>.json by default; point at that absolute path.
+credentials-file: CHANGE-ME-/home/you/.cloudflared/<UUID>.json
+
+# Route rules, evaluated top-to-bottom. WebSocket (/ws) is proxied
+# automatically over the tunnel — no extra config needed.
+ingress:
+  # Your public hostname → the local Agent OS API.
+  - hostname: CHANGE-ME-juan-os.example.com
+    service: http://127.0.0.1:8787
+  # Required catch-all: everything else gets a 404.
+  - service: http_status:404
